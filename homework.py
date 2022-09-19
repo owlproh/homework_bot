@@ -12,8 +12,9 @@ PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-RETRY_TIME = 600
+RETRY_TIME: int = 60 * 10
 CURRENT_TIME = int(time.time())
+DAY: int = 24 * 60 * 60
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -26,13 +27,14 @@ HOMEWORK_STATUSES = {
 
 logging.basicConfig(
     level=logging.INFO,
-    filename=u"hwr.log",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(__file__ + ".log", encoding="UTF-8")
+    ],
     format=u"%(name)s[LINE:%(lineno)d]#"
            u"%(levelname)-8s [%(asctime)s]  %(message)s"
 )
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(stream="sys.stdout")
-logger.addHandler(handler)
 
 
 def send_message(bot, message):
@@ -117,7 +119,7 @@ def parse_status(homework):
 def check_tokens():
     """Проверяем доступность переменных окружения."""
     logger.info("Проверяем доступность переменных окружения")
-    return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
@@ -126,7 +128,7 @@ def main():
         logger.critical("Переменные окружения недоступны!")
         raise KeyError("Переменные окружения недоступны!")
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time())
+    current_timestamp = int(time.time()) - DAY
     statuses = []
     while True:
         try:
