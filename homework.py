@@ -14,16 +14,11 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 RETRY_TIME: int = 60 * 10
 CURRENT_TIME = int(time.time())
-WEEK: int = 7 * 24 * 60 * 60
+WEEK: int = 10 * 24 * 60 * 60
 
 HEADERS = {"Authorization": f"OAuth {PRACTICUM_TOKEN}"}
-ENDPOINT = "https://practicum.yandex.ru/api/user_api/hom_ework_statuses/"
+ENDPOINT = "https://practicum.yandex.ru/api/user_api/homework_statuses/"
 
-request_params = {
-    "url": ENDPOINT,
-    "headers": HEADERS,
-    "params": {"from_date": CURRENT_TIME - WEEK}
-}
 HOMEWORK_VERDICTS = {
     "approved": "Работа проверена: ревьюеру всё понравилось. Ура!",
     "reviewing": "Работа взята на проверку ревьюером.",
@@ -47,9 +42,14 @@ def send_message(bot, message):
         logger.info(f"Удачная отправка сообщения '{message}' пользователю.")
 
 
-def get_api_answer(request_params):
+def get_api_answer(current_timestamp):
     """Получаем ответ от API Практикум.Домашка."""
     logger.info("Получаем ответ от API.")
+    request_params = {
+        "url": ENDPOINT,
+        "headers": HEADERS,
+        "params": {"from_date": current_timestamp}
+    }
     try:
         homeworks = requests.get(**request_params)
     except Exception as error:
@@ -117,7 +117,7 @@ def parse_status(homework):
     logger.info(
         f"Изменился статус проверки работы '{homework_name}'. {verdict}"
     )
-    return f"Изменился статус проверки работы '{homework_name}'. {verdict}"
+    return (f'Изменился статус проверки работы "{homework_name}". {verdict}')
 
 
 def check_tokens():
@@ -132,10 +132,11 @@ def main():
         logger.critical("Переменные окружения недоступны!")
         raise KeyError("Переменные окружения недоступны!")
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    current_timestamp = int(time.time()) - WEEK
     statuses = []
     while True:
         try:
-            response = get_api_answer(request_params)
+            response = get_api_answer(current_timestamp)
             list_hws = check_response(response)
             try:
                 (list_hws[0])
@@ -157,6 +158,8 @@ def main():
             time.sleep(RETRY_TIME)
 
 
+logger = logging.getLogger(__name__)
+
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.INFO,
@@ -167,5 +170,4 @@ if __name__ == '__main__':
         format=u"%(name)s || %(funcName)s || [LINE:%(lineno)d]#"
                u"%(levelname)s || [%(asctime)s] || %(message)s"
     )
-    logger = logging.getLogger(__name__)
     main()
