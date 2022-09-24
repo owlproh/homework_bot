@@ -53,7 +53,6 @@ def get_api_answer(current_timestamp):
     try:
         homeworks = requests.get(**request_params)
     except Exception as error:
-        logger.error(f"Сбой '{error}' при запросе к эндпоинту.")
         raise KeyError(f"Сбой '{error}' при запросе к эндпоинту.")
     status_code = homeworks.status_code
     if status_code != HTTPStatus.OK:
