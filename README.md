@@ -15,6 +15,7 @@
 
 - [Python 3.7+](https://www.python.org/)
 - [python-telegram-bot](https://docs.python-telegram-bot.org/en/stable/)
+- [python-dotenv](https://pypi.org/project/python-dotenv/)
 
 #### Запуск проекта (Dev-режим)
 
